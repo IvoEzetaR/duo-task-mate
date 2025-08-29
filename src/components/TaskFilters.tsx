@@ -21,16 +21,18 @@ export function TaskFiltersComponent({ filters, onFiltersChange, projects }: Tas
   };
 
   const clearFilter = (key: keyof TaskFilters) => {
-    updateFilter(key, undefined);
+    const newFilters = { ...filters };
+    delete newFilters[key];
+    onFiltersChange(newFilters);
   };
 
   const clearAllFilters = () => {
-    onFiltersChange({ search: '' });
+    onFiltersChange({ search: filters.search || '' });
     setShowAdvanced(false);
   };
 
-  const activeFilterCount = Object.keys(filters).filter(key => 
-    key !== 'search' && filters[key as keyof TaskFilters]
+  const activeFilterCount = Object.keys(filters).filter(
+    key => key !== 'search' && filters[key as keyof TaskFilters] !== undefined
   ).length;
 
   return (
@@ -109,7 +111,7 @@ export function TaskFiltersComponent({ filters, onFiltersChange, projects }: Tas
 
       {/* Filtros avanzados */}
       {showAdvanced && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-card border border-border rounded-lg">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-card border border-border rounded-lg">
           <div>
             <Label className="text-sm font-medium text-foreground mb-2 block">Responsable</Label>
             <Select 
@@ -188,6 +190,43 @@ export function TaskFiltersComponent({ filters, onFiltersChange, projects }: Tas
                 variant="ghost"
                 size="sm"
                 onClick={() => clearFilter('project')}
+                className="text-xs text-muted-foreground hover:text-destructive mt-1 h-6 p-1"
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium text-foreground mb-2 block">Filtrar por Mes</Label>
+            <Select 
+              value={filters.month || 'all'} 
+              onValueChange={(value) => updateFilter('month', value === 'all' ? undefined : value)}
+            >
+              <SelectTrigger className="bg-background border-border text-foreground">
+                <SelectValue placeholder="Todos los meses" />
+              </SelectTrigger>
+              <SelectContent className="bg-popover border-border z-50">
+                <SelectItem value="all">Todos los meses</SelectItem>
+                <SelectItem value="2025-01">Enero 2025</SelectItem>
+                <SelectItem value="2025-02">Febrero 2025</SelectItem>
+                <SelectItem value="2025-03">Marzo 2025</SelectItem>
+                <SelectItem value="2025-04">Abril 2025</SelectItem>
+                <SelectItem value="2025-05">Mayo 2025</SelectItem>
+                <SelectItem value="2025-06">Junio 2025</SelectItem>
+                <SelectItem value="2025-07">Julio 2025</SelectItem>
+                <SelectItem value="2025-08">Agosto 2025</SelectItem>
+                <SelectItem value="2025-09">Septiembre 2025</SelectItem>
+                <SelectItem value="2025-10">Octubre 2025</SelectItem>
+                <SelectItem value="2025-11">Noviembre 2025</SelectItem>
+                <SelectItem value="2025-12">Diciembre 2025</SelectItem>
+              </SelectContent>
+            </Select>
+            {filters.month && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => clearFilter('month')}
                 className="text-xs text-muted-foreground hover:text-destructive mt-1 h-6 p-1"
               >
                 <X className="h-3 w-3" />

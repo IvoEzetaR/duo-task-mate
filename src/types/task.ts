@@ -23,8 +23,10 @@ export interface Task {
 }
 
 export interface TaskFilters {
+  search?: string;
   status?: TaskStatus[];
   responsible?: TaskResponsible[];
   priority?: TaskPriority[];
   project?: string[];
+  month?: string;
 }

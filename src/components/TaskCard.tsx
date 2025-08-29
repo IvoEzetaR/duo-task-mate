@@ -9,6 +9,7 @@ interface TaskCardProps {
   task: Task;
   onEdit: (task: Task) => void;
   onStatusChange: (taskId: string, newStatus: Task['status']) => void;
+  onDelete: (taskId: string) => void;
 }
 
 const statusConfig = {
@@ -24,7 +25,7 @@ const priorityConfig = {
   low: { emoji: '❄️', label: 'Baja', color: 'priority-low' }
 };
 
-export function TaskCard({ task, onEdit, onStatusChange }: TaskCardProps) {
+export function TaskCard({ task, onEdit, onStatusChange, onDelete }: TaskCardProps) {
   const statusInfo = statusConfig[task.status];
   const priorityInfo = priorityConfig[task.priority];
 
@@ -113,6 +114,14 @@ export function TaskCard({ task, onEdit, onStatusChange }: TaskCardProps) {
           className="flex-1 bg-primary hover:bg-primary/90"
         >
           {statusConfig[getNextStatus(task.status)].emoji} Siguiente
+        </Button>
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={() => onDelete(task.id)}
+          className="px-3"
+        >
+          Eliminar
         </Button>
       </CardFooter>
     </Card>

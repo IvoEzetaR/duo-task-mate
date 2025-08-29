@@ -9,6 +9,7 @@ interface TaskTableProps {
   tasks: Task[];
   onEdit: (task: Task) => void;
   onStatusChange: (taskId: string, newStatus: Task['status']) => void;
+  onDelete: (taskId: string) => void;
 }
 
 const statusConfig = {
@@ -24,7 +25,7 @@ const priorityConfig = {
   low: { emoji: '❄️', label: 'Baja', color: 'priority-low' }
 };
 
-export function TaskTable({ tasks, onEdit, onStatusChange }: TaskTableProps) {
+export function TaskTable({ tasks, onEdit, onStatusChange, onDelete }: TaskTableProps) {
   const getNextStatus = (currentStatus: Task['status']): Task['status'] => {
     const statusFlow: Record<Task['status'], Task['status']> = {
       'pending': 'in-progress',
@@ -121,6 +122,14 @@ export function TaskTable({ tasks, onEdit, onStatusChange }: TaskTableProps) {
                       className="h-8 px-2 text-xs hover:bg-primary/10"
                     >
                       {statusConfig[getNextStatus(task.status)].emoji}
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => onDelete(task.id)}
+                      className="h-8 px-2 text-xs"
+                    >
+                      🗑️
                     </Button>
                   </div>
                 </TableCell>

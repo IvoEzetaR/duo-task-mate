@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,60 +9,16 @@ import { TaskFiltersComponent } from "@/components/TaskFilters";
 import { Task, TaskFilters } from "@/types/task";
 import { Plus, Grid3X3, Table, CheckCircle2, Clock, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-const sampleTasks: Task[] = [
-  {
-    id: '1',
-    name: 'Diseñar el logo de la empresa',
-    status: 'in-progress',
-    description: 'Crear un logo moderno y atractivo que represente los valores de la empresa. Debe incluir variaciones para fondo claro y oscuro.',
-    responsible: 'Ivo',
-    priority: 'high',
-    dueDate: '2024-01-15',
-    project: 'Branding',
-    comments: [
-      { id: '1', text: 'Revisar colores corporativos', date: '10/01/2024' }
-    ],
-    createdAt: '2024-01-01',
-    updatedAt: '2024-01-10'
-  },
-  {
-    id: '2',
-    name: 'Implementar sistema de autenticación',
-    status: 'pending',
-    description: 'Desarrollar un sistema de login y registro seguro para la aplicación web.',
-    responsible: 'Enzo',
-    priority: 'high',
-    dueDate: '2024-01-20',
-    project: 'Desarrollo',
-    comments: [],
-    createdAt: '2024-01-05',
-    updatedAt: '2024-01-05'
-  },
-  {
-    id: '3',
-    name: 'Crear contenido para redes sociales',
-    status: 'completed',
-    description: 'Planificar y crear posts para Instagram, Facebook y LinkedIn durante el mes de enero.',
-    responsible: 'Ivo',
-    priority: 'medium',
-    dueDate: '2024-01-12',
-    project: 'Marketing',
-    comments: [
-      { id: '2', text: 'Posts programados hasta el 15/01', date: '12/01/2024' }
-    ],
-    createdAt: '2024-01-02',
-    updatedAt: '2024-01-12'
-  }
-];
+import { useTasks } from "@/hooks/useTasks";
 
 const Index = () => {
-  const [tasks, setTasks] = useState<Task[]>(sampleTasks);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
   const [filters, setFilters] = useState<TaskFilters & { search: string }>({ search: '' });
   const { toast } = useToast();
+  
+  const { tasks, loading, createTask, updateTask, deleteTask, updateTaskStatus } = useTasks();
 
   const filteredTasks = useMemo(() => {
     return tasks.filter(task => {
@@ -77,8 +33,11 @@ const Index = () => {
       const responsibleMatch = !filters.responsible || filters.responsible.includes(task.responsible);
       const priorityMatch = !filters.priority || filters.priority.includes(task.priority);
       const projectMatch = !filters.project || filters.project.includes(task.project);
+      
+      // Filtro por mes
+      const monthMatch = !filters.month || task.dueDate.startsWith(filters.month);
 
-      return searchMatch && statusMatch && responsibleMatch && priorityMatch && projectMatch;
+      return searchMatch && statusMatch && responsibleMatch && priorityMatch && projectMatch && monthMatch;
     });
   }, [tasks, filters]);
 
@@ -94,36 +53,30 @@ const Index = () => {
     return { total, pending, inProgress, completed };
   }, [tasks]);
 
-  const handleSaveTask = (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const now = new Date().toISOString();
-    
-    if (editingTask) {
-      // Editar tarea existente
-      setTasks(prev => prev.map(task => 
-        task.id === editingTask.id 
-          ? { ...task, ...taskData, updatedAt: now }
-          : task
-      ));
+  const handleSaveTask = async (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      if (editingTask) {
+        await updateTask({ ...editingTask, ...taskData });
+        toast({
+          title: "Tarea actualizada",
+          description: "Los cambios se han guardado correctamente.",
+        });
+      } else {
+        await createTask(taskData);
+        toast({
+          title: "Tarea creada",
+          description: "La nueva tarea se ha añadido correctamente.",
+        });
+      }
+      setEditingTask(null);
+      setIsFormOpen(false);
+    } catch (error) {
       toast({
-        title: "Tarea actualizada",
-        description: "Los cambios se han guardado correctamente.",
-      });
-    } else {
-      // Nueva tarea
-      const newTask: Task = {
-        ...taskData,
-        id: Date.now().toString(),
-        createdAt: now,
-        updatedAt: now
-      };
-      setTasks(prev => [newTask, ...prev]);
-      toast({
-        title: "Tarea creada",
-        description: "La nueva tarea se ha añadido correctamente.",
+        title: "Error",
+        description: "No se pudo guardar la tarea. Intenta de nuevo.",
+        variant: "destructive",
       });
     }
-    
-    setEditingTask(null);
   };
 
   const handleEditTask = (task: Task) => {
@@ -131,30 +84,61 @@ const Index = () => {
     setIsFormOpen(true);
   };
 
-  const handleStatusChange = (taskId: string, newStatus: Task['status']) => {
-    setTasks(prev => prev.map(task => 
-      task.id === taskId 
-        ? { ...task, status: newStatus, updatedAt: new Date().toISOString() }
-        : task
-    ));
-    
-    const statusLabels = {
-      pending: 'Pendiente',
-      'in-progress': 'En Proceso', 
-      review: 'En Revisión',
-      completed: 'Completada'
-    };
-    
-    toast({
-      title: "Estado actualizado",
-      description: `La tarea ahora está: ${statusLabels[newStatus]}`,
-    });
+  const handleStatusChange = async (taskId: string, newStatus: Task['status']) => {
+    try {
+      await updateTaskStatus(taskId, newStatus);
+      
+      const statusLabels = {
+        pending: 'Pendiente',
+        'in-progress': 'En Proceso', 
+        review: 'En Revisión',
+        completed: 'Completada'
+      };
+      
+      toast({
+        title: "Estado actualizado",
+        description: `La tarea ahora está: ${statusLabels[newStatus]}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el estado de la tarea.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteTask = async (taskId: string) => {
+    try {
+      await deleteTask(taskId);
+      toast({
+        title: "Tarea eliminada",
+        description: "La tarea se ha eliminado correctamente.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar la tarea.",
+        variant: "destructive",
+      });
+    }
   };
 
   const openNewTaskForm = () => {
     setEditingTask(null);
     setIsFormOpen(true);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Cargando tareas...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -276,6 +260,7 @@ const Index = () => {
                     task={task}
                     onEdit={handleEditTask}
                     onStatusChange={handleStatusChange}
+                    onDelete={handleDeleteTask}
                   />
                 ))}
               </div>
@@ -284,6 +269,7 @@ const Index = () => {
                 tasks={filteredTasks}
                 onEdit={handleEditTask}
                 onStatusChange={handleStatusChange}
+                onDelete={handleDeleteTask}
               />
             )}
           </div>
