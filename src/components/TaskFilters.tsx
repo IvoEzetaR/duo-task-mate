@@ -113,14 +113,14 @@ export function TaskFiltersComponent({ filters, onFiltersChange, projects }: Tas
           <div>
             <Label className="text-sm font-medium text-foreground mb-2 block">Responsable</Label>
             <Select 
-              value={filters.responsible?.[0] || ''} 
-              onValueChange={(value) => updateFilter('responsible', value ? [value as TaskResponsible] : undefined)}
+              value={filters.responsible?.[0] || 'all'} 
+              onValueChange={(value) => updateFilter('responsible', value === 'all' ? undefined : [value as TaskResponsible])}
             >
               <SelectTrigger className="bg-background border-border text-foreground">
                 <SelectValue placeholder="Todos" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+              <SelectContent className="bg-popover border-border z-50">
+                <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="Ivo">Ivo</SelectItem>
                 <SelectItem value="Enzo">Enzo</SelectItem>
               </SelectContent>
@@ -140,14 +140,14 @@ export function TaskFiltersComponent({ filters, onFiltersChange, projects }: Tas
           <div>
             <Label className="text-sm font-medium text-foreground mb-2 block">Prioridad</Label>
             <Select 
-              value={filters.priority?.[0] || ''} 
-              onValueChange={(value) => updateFilter('priority', value ? [value as TaskPriority] : undefined)}
+              value={filters.priority?.[0] || 'all'} 
+              onValueChange={(value) => updateFilter('priority', value === 'all' ? undefined : [value as TaskPriority])}
             >
               <SelectTrigger className="bg-background border-border text-foreground">
                 <SelectValue placeholder="Todas" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Todas</SelectItem>
+              <SelectContent className="bg-popover border-border z-50">
+                <SelectItem value="all">Todas</SelectItem>
                 <SelectItem value="high">🔥 Alta</SelectItem>
                 <SelectItem value="medium">⭐ Media</SelectItem>
                 <SelectItem value="low">❄️ Baja</SelectItem>
@@ -168,14 +168,14 @@ export function TaskFiltersComponent({ filters, onFiltersChange, projects }: Tas
           <div>
             <Label className="text-sm font-medium text-foreground mb-2 block">Proyecto</Label>
             <Select 
-              value={filters.project?.[0] || ''} 
-              onValueChange={(value) => updateFilter('project', value ? [value] : undefined)}
+              value={filters.project?.[0] || 'all'} 
+              onValueChange={(value) => updateFilter('project', value === 'all' ? undefined : [value])}
             >
               <SelectTrigger className="bg-background border-border text-foreground">
                 <SelectValue placeholder="Todos" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+              <SelectContent className="bg-popover border-border z-50">
+                <SelectItem value="all">Todos</SelectItem>
                 {projects.map((project) => (
                   <SelectItem key={project} value={project}>
                     {project}

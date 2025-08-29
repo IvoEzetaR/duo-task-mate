@@ -117,7 +117,7 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
                 <SelectTrigger className="bg-background border-border text-foreground">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-popover border-border z-50">
                   <SelectItem value="Ivo">Ivo</SelectItem>
                   <SelectItem value="Enzo">Enzo</SelectItem>
                 </SelectContent>
@@ -131,7 +131,7 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
                 <SelectTrigger className="bg-background border-border text-foreground">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-popover border-border z-50">
                   <SelectItem value="high">🔥 Alta</SelectItem>
                   <SelectItem value="medium">⭐ Media</SelectItem>
                   <SelectItem value="low">❄️ Baja</SelectItem>
@@ -146,7 +146,7 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
                 <SelectTrigger className="bg-background border-border text-foreground">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-popover border-border z-50">
                   <SelectItem value="pending">⚪ Pendiente</SelectItem>
                   <SelectItem value="in-progress">🟡 En Proceso</SelectItem>
                   <SelectItem value="review">🔵 En Revisión</SelectItem>
