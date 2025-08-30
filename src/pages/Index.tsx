@@ -7,9 +7,10 @@ import { TaskTable } from "@/components/TaskTable";
 import { TaskForm } from "@/components/TaskForm";
 import { TaskFiltersComponent } from "@/components/TaskFilters";
 import { Task, TaskFilters } from "@/types/task";
-import { Plus, Grid3X3, Table, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { Plus, Grid3X3, Table, CheckCircle2, Clock, AlertCircle, LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTasks } from "@/hooks/useTasks";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -19,6 +20,7 @@ const Index = () => {
   const { toast } = useToast();
   
   const { tasks, loading, createTask, updateTask, deleteTask, updateTaskStatus } = useTasks();
+  const { signOut, user } = useAuth();
 
   const filteredTasks = useMemo(() => {
     return tasks.filter(task => {
@@ -129,6 +131,22 @@ const Index = () => {
     setIsFormOpen(true);
   };
 
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Sesión cerrada",
+        description: "Has cerrado sesión correctamente.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo cerrar sesión.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -150,16 +168,26 @@ const Index = () => {
               Task Manager
             </h1>
             <p className="text-muted-foreground mt-1">
-              Centro de control de tareas para Ivo y Enzo
+              Centro de control de tareas • {user?.email}
             </p>
           </div>
-          <Button 
-            onClick={openNewTaskForm}
-            className="bg-primary hover:bg-primary/90 shadow-task"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Nueva Tarea
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={openNewTaskForm}
+              className="bg-primary hover:bg-primary/90 shadow-task"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Nueva Tarea
+            </Button>
+            <Button 
+              onClick={handleSignOut}
+              variant="outline"
+              className="border-border"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Cerrar Sesión
+            </Button>
+          </div>
         </div>
 
         {/* Stats */}
