@@ -58,7 +58,7 @@ export function useTasks() {
           description: taskData.description,
           responsible: taskData.responsible,
           priority: taskData.priority,
-          due_date: taskData.dueDate,
+          due_date: taskData.dueDate || null,
           project: taskData.project
         })
         .select()
@@ -95,7 +95,7 @@ export function useTasks() {
           description: taskData.description,
           responsible: taskData.responsible,
           priority: taskData.priority,
-          due_date: taskData.dueDate,
+          due_date: taskData.dueDate || null,
           project: taskData.project
         })
         .eq('id', taskData.id);
