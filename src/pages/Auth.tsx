@@ -89,11 +89,23 @@ const Auth = () => {
           variant: 'destructive',
         });
       } else {
-        toast({
-          title: 'Cuenta creada',
-          description: 'Tu cuenta ha sido creada exitosamente. Puedes iniciar sesión ahora.',
-        });
-        setActiveTab('login');
+        // Automatically sign in after successful signup
+        const loginResult = await signIn(email, password);
+        
+        if (loginResult.error) {
+          toast({
+            title: 'Cuenta creada',
+            description: 'Tu cuenta ha sido creada. Por favor inicia sesión.',
+          });
+          setActiveTab('login');
+        } else {
+          toast({
+            title: 'Bienvenido',
+            description: 'Tu cuenta ha sido creada e iniciaste sesión exitosamente.',
+          });
+          // Navigation will be handled by the useEffect when user state changes
+        }
+        
         setEmail('');
         setPassword('');
       }
