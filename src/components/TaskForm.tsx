@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +28,35 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
   });
   
   const [newComment, setNewComment] = useState('');
+
+  // Update form data when task prop changes
+  useEffect(() => {
+    if (task) {
+      setFormData({
+        name: task.name || '',
+        description: task.description || '',
+        responsible: task.responsible || 'Ivo',
+        priority: task.priority || 'medium',
+        status: task.status || 'pending',
+        dueDate: task.dueDate || '',
+        project: task.project || '',
+        comments: task.comments || []
+      });
+    } else {
+      // Reset form for new task
+      setFormData({
+        name: '',
+        description: '',
+        responsible: 'Ivo',
+        priority: 'medium',
+        status: 'pending',
+        dueDate: '',
+        project: '',
+        comments: []
+      });
+    }
+    setNewComment('');
+  }, [task, isOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
