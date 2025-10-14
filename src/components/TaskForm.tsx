@@ -83,13 +83,13 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
 
   const addComment = () => {
     if (!newComment.trim()) return;
-    
+
     const comment = {
       id: Date.now().toString(),
       text: newComment,
-      date: new Date().toLocaleDateString('es-ES')
+      date: new Date().toISOString().split('T')[0] // Formato YYYY-MM-DD para la base de datos
     };
-    
+
     setFormData(prev => ({
       ...prev,
       comments: [...prev.comments, comment]
@@ -214,7 +214,9 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
                 <div key={comment.id} className="flex items-start gap-2 p-3 bg-secondary/50 rounded-md">
                   <div className="flex-1">
                     <p className="text-sm text-foreground">{comment.text}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{comment.date}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {new Date(comment.date).toLocaleDateString('es-ES')}
+                    </p>
                   </div>
                   <Button
                     type="button"
