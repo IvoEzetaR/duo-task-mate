@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Task, TaskPriority, TaskResponsible, TaskStatus } from "@/types/task";
+import { Task, TaskPriority, TaskResponsible, TaskStatus, TaskPrivacy } from "@/types/task";
 import { Plus, X } from "lucide-react";
 
 interface TaskFormProps {
@@ -24,10 +24,13 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
     status: task?.status || 'pending' as TaskStatus,
     dueDate: task?.dueDate || '',
     project: task?.project || '',
+    privacy: task?.privacy || 'general' as TaskPrivacy,
+    sharedWith: task?.sharedWith || [],
     comments: task?.comments || []
   });
-  
+
   const [newComment, setNewComment] = useState('');
+  const [newSharedUser, setNewSharedUser] = useState('');
 
   // Update form data when task prop changes
   useEffect(() => {
@@ -40,6 +43,8 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
         status: task.status || 'pending',
         dueDate: task.dueDate || '',
         project: task.project || '',
+        privacy: task.privacy || 'general',
+        sharedWith: task.sharedWith || [],
         comments: task.comments || []
       });
     } else {
@@ -52,10 +57,13 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
         status: 'pending',
         dueDate: '',
         project: '',
+        privacy: 'general',
+        sharedWith: [],
         comments: []
       });
     }
     setNewComment('');
+    setNewSharedUser('');
   }, [task, isOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -76,9 +84,12 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
       status: 'pending',
       dueDate: '',
       project: '',
+      privacy: 'general',
+      sharedWith: [],
       comments: []
     });
     setNewComment('');
+    setNewSharedUser('');
   };
 
   const addComment = () => {
@@ -101,6 +112,23 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
     setFormData(prev => ({
       ...prev,
       comments: prev.comments.filter(c => c.id !== commentId)
+    }));
+  };
+
+  const addSharedUser = () => {
+    if (!newSharedUser.trim() || formData.sharedWith.includes(newSharedUser.trim())) return;
+
+    setFormData(prev => ({
+      ...prev,
+      sharedWith: [...prev.sharedWith, newSharedUser.trim()]
+    }));
+    setNewSharedUser('');
+  };
+
+  const removeSharedUser = (userEmail: string) => {
+    setFormData(prev => ({
+      ...prev,
+      sharedWith: prev.sharedWith.filter(email => email !== userEmail)
     }));
   };
 
@@ -171,7 +199,7 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
 
             <div>
               <Label htmlFor="status" className="text-foreground">Estado</Label>
-              <Select value={formData.status} onValueChange={(value: TaskStatus) => 
+              <Select value={formData.status} onValueChange={(value: TaskStatus) =>
                 setFormData(prev => ({ ...prev, status: value }))}>
                 <SelectTrigger className="bg-background border-border text-foreground">
                   <SelectValue />
@@ -181,6 +209,20 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
                   <SelectItem value="in-progress">🟡 En Proceso</SelectItem>
                   <SelectItem value="review">🔵 En Revisión</SelectItem>
                   <SelectItem value="completed">✅ Completada</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="privacy" className="text-foreground">Privacidad</Label>
+              <Select value={formData.privacy} onValueChange={(value: TaskPrivacy) =>
+                setFormData(prev => ({ ...prev, privacy: value }))}>
+                <SelectTrigger className="bg-background border-border text-foreground">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border-border z-50">
+                  <SelectItem value="private">🔒 Privada</SelectItem>
+                  <SelectItem value="general">🌐 General</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -205,6 +247,50 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
                 placeholder="Ej: Marketing, Desarrollo, Cliente X"
                 className="bg-background border-border text-foreground"
               />
+            </div>
+
+            <div className="col-span-2">
+              <Label className="text-foreground">Usuarios Compartidos</Label>
+              <div className="space-y-3">
+                {formData.sharedWith.map((email) => (
+                  <div key={email} className="flex items-center gap-2 p-2 bg-secondary/50 rounded-md">
+                    <span className="text-sm text-foreground flex-1">{email}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeSharedUser(email)}
+                      className="h-6 w-6 p-0 hover:bg-destructive/20"
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ))}
+
+                <div className="flex gap-2">
+                  <Input
+                    value={newSharedUser}
+                    onChange={(e) => setNewSharedUser(e.target.value)}
+                    placeholder="Agregar email de usuario..."
+                    className="bg-background border-border text-foreground"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        addSharedUser();
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addSharedUser}
+                    className="px-3 hover:bg-primary/10"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
 

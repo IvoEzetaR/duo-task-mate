@@ -1,6 +1,7 @@
 export type TaskStatus = 'pending' | 'in-progress' | 'review' | 'completed';
 export type TaskPriority = 'high' | 'medium' | 'low';
 export type TaskResponsible = 'Ivo' | 'Enzo' | 'Mirella';
+export type TaskPrivacy = 'private' | 'general';
 
 export interface TaskComment {
   id: string;
@@ -18,6 +19,8 @@ export interface Task {
   dueDate: string | null;
   project: string;
   comments: TaskComment[];
+  privacy: TaskPrivacy;
+  sharedWith: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -28,5 +31,6 @@ export interface TaskFilters {
   responsible?: TaskResponsible[];
   priority?: TaskPriority[];
   project?: string[];
+  privacy?: TaskPrivacy[];
   month?: string;
 }

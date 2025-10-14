@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Task, TaskComment } from '@/types/task';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function useTasks() {
+  const { user } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -21,7 +23,32 @@ export function useTasks() {
 
       if (commentsError) throw commentsError;
 
-      const tasksWithComments = tasksData?.map(task => ({
+      let filteredTasks = tasksData || [];
+
+      // Filtrar tareas por privacidad si hay usuario autenticado
+      if (user) {
+        filteredTasks = tasksData?.filter(task => {
+          // Incluir tareas propias (siempre visibles para el creador)
+          if (task.responsible === user.email) {
+            return true;
+          }
+
+          // Si la tarea es general, todos pueden verla
+          if (task.privacy === 'general') {
+            return true;
+          }
+
+          // Si la tarea es privada, solo el responsable y usuarios compartidos pueden verla
+          if (task.privacy === 'private') {
+            const sharedWith = Array.isArray(task.shared_with) ? task.shared_with : [];
+            return sharedWith.includes(user.email);
+          }
+
+          return false;
+        }) || [];
+      }
+
+      const tasksWithComments = filteredTasks.map(task => ({
         id: task.id,
         name: task.name,
         status: task.status as Task['status'],
@@ -30,6 +57,8 @@ export function useTasks() {
         priority: task.priority as Task['priority'],
         dueDate: task.due_date,
         project: task.project,
+        privacy: task.privacy as Task['privacy'],
+        sharedWith: Array.isArray(task.shared_with) ? task.shared_with : [],
         createdAt: task.created_at,
         updatedAt: task.updated_at,
         comments: commentsData?.filter(comment => comment.task_id === task.id)
@@ -38,7 +67,7 @@ export function useTasks() {
             text: comment.text,
             date: comment.date
           })) || []
-      })) || [];
+      }));
 
       setTasks(tasksWithComments);
     } catch (error) {
@@ -59,7 +88,9 @@ export function useTasks() {
           responsible: taskData.responsible,
           priority: taskData.priority,
           due_date: taskData.dueDate || null,
-          project: taskData.project
+          project: taskData.project,
+          privacy: taskData.privacy,
+          shared_with: taskData.sharedWith || []
         })
         .select()
         .single();
@@ -96,7 +127,9 @@ export function useTasks() {
           responsible: taskData.responsible,
           priority: taskData.priority,
           due_date: taskData.dueDate || null,
-          project: taskData.project
+          project: taskData.project,
+          privacy: taskData.privacy,
+          shared_with: taskData.sharedWith || []
         })
         .eq('id', taskData.id);
 
