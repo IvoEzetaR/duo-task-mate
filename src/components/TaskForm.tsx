@@ -149,6 +149,7 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
                 <SelectContent className="bg-popover border-border z-50">
                   <SelectItem value="Ivo">Ivo</SelectItem>
                   <SelectItem value="Enzo">Enzo</SelectItem>
+                  <SelectItem value="Mirella">Mirella</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -125,6 +125,7 @@ export function TaskFiltersComponent({ filters, onFiltersChange, projects }: Tas
                 <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="Ivo">Ivo</SelectItem>
                 <SelectItem value="Enzo">Enzo</SelectItem>
+                <SelectItem value="Mirella">Mirella</SelectItem>
               </SelectContent>
             </Select>
             {filters.responsible && (

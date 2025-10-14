@@ -1,6 +1,6 @@
 export type TaskStatus = 'pending' | 'in-progress' | 'review' | 'completed';
 export type TaskPriority = 'high' | 'medium' | 'low';
-export type TaskResponsible = 'Ivo' | 'Enzo';
+export type TaskResponsible = 'Ivo' | 'Enzo' | 'Mirella';
 
 export interface TaskComment {
   id: string;
