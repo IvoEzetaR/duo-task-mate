@@ -36,8 +36,8 @@ const Index = () => {
       const priorityMatch = !filters.priority || filters.priority.includes(task.priority);
       const projectMatch = !filters.project || filters.project.includes(task.project);
       
-      // Filtro por mes
-      const monthMatch = !filters.month || task.dueDate.startsWith(filters.month);
+      // Filtro por mes (maneja dueDate nulo)
+      const monthMatch = !filters.month || (task.dueDate?.startsWith(filters.month) ?? false);
 
       return searchMatch && statusMatch && responsibleMatch && priorityMatch && projectMatch && monthMatch;
     });

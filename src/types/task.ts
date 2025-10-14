@@ -15,7 +15,7 @@ export interface Task {
   description: string;
   responsible: TaskResponsible;
   priority: TaskPriority;
-  dueDate: string;
+  dueDate: string | null;
   project: string;
   comments: TaskComment[];
   createdAt: string;

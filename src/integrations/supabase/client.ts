@@ -2,8 +2,13 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = "https://xlckrseymoahtsfneuyu.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsY2tyc2V5bW9haHRzZm5ldXl1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY1MDkwNzAsImV4cCI6MjA3MjA4NTA3MH0.XH11sJV_234zNXgL8lmdeTNsBlOqGk9G1nlU_Pbh7v8";
+// Prefer environment variables (configured in .env for Vite and in Vercel Project Settings)
+const ENV_URL = import.meta.env?.VITE_SUPABASE_URL as string | undefined;
+const ENV_ANON = import.meta.env?.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
+
+// Fallback to hardcoded values if env vars are not provided (useful for local/dev)
+const SUPABASE_URL = ENV_URL || "https://xlckrseymoahtsfneuyu.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = ENV_ANON || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhsY2tyc2V5bW9haHRzZm5ldXl1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY1MDkwNzAsImV4cCI6MjA3MjA4NTA3MH0.XH11sJV_234zNXgL8lmdeTNsBlOqGk9G1nlU_Pbh7v8";
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
