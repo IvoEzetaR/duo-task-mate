@@ -105,7 +105,16 @@ const Index = () => {
       } else {
         // Para nuevas tareas, obtener el username del usuario actual
         const currentUsername = await getCurrentUsername();
+        console.log('Current username:', currentUsername);
+        console.log('Task data before:', taskData);
+
+        if (!currentUsername) {
+          throw new Error('No se pudo obtener el username del usuario actual');
+        }
+
         const taskWithCreator = { ...taskData, createdBy: currentUsername };
+        console.log('Task data with creator:', taskWithCreator);
+
         await createTask(taskWithCreator);
         toast({
           title: "Tarea creada",
@@ -115,9 +124,10 @@ const Index = () => {
       setEditingTask(null);
       setIsFormOpen(false);
     } catch (error) {
+      console.error('Error saving task:', error);
       toast({
         title: "Error",
-        description: "No se pudo guardar la tarea. Intenta de nuevo.",
+        description: `No se pudo guardar la tarea: ${error instanceof Error ? error.message : 'Error desconocido'}`,
         variant: "destructive",
       });
     }
