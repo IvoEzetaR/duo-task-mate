@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Task, TaskComment } from '@/types/task';
 import { useAuth } from '@/contexts/AuthContext';
+import { canUserSeeTask } from '@/lib/visibility';
 
 export function useTasks() {
   const { user } = useAuth();
@@ -56,10 +57,7 @@ export function useTasks() {
     try {
       setLoading(true);
 
-      // If user is authenticated but we don't yet know their username, wait before showing anything
-      if (user && !currentUsername) {
-        return; // loading stays true; UI will show spinner until username is ready
-      }
+      // Even si no tenemos username aún, podemos cargar y luego filtrar solo generales
 
       const { data: tasksData, error: tasksError } = await supabase
         .from('tasks')
@@ -76,18 +74,16 @@ export function useTasks() {
 
       let filteredTasks = tasksData || [];
 
-      // Visibilidad: mostrar SOLO tareas donde el usuario actual es responsable o está en compartidos
-      if (user && currentUsername) {
-        filteredTasks = (tasksData || []).filter(task => {
-          const sharedWith = Array.isArray(task.shared_with) ? task.shared_with : [];
-          const canSee = task.responsible === currentUsername || sharedWith.includes(currentUsername);
-          return canSee;
-        });
-      }
-      // If user is authenticated but username isn't ready, do not expose unfiltered tasks
-      if (user && !currentUsername) {
-        setTasks([]);
-        return;
+      // Visibilidad:
+      // - No autenticado: solo generales
+      // - Autenticado y con username: generales + privadas donde el usuario es responsable o está en compartidos
+      // - Autenticado sin username resuelto aún: mostrar solo generales (evitar exponer privadas)
+      if (!user) {
+        filteredTasks = (tasksData || []).filter(task => canUserSeeTask(task, null));
+      } else if (user && !currentUsername) {
+        filteredTasks = (tasksData || []).filter(task => task.privacy === 'general');
+      } else {
+        filteredTasks = (tasksData || []).filter(task => canUserSeeTask(task, currentUsername));
       }
 
       const tasksWithComments = filteredTasks.map(task => ({

@@ -1,7 +1,7 @@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, MessageSquare, User } from "lucide-react";
+import { Calendar, MessageSquare, User, Users } from "lucide-react";
 import { Task } from "@/types/task";
 import { cn } from "@/lib/utils";
 
@@ -103,6 +103,18 @@ export function TaskCard({ task, onEdit, onStatusChange, onDelete }: TaskCardPro
           <span className="text-xs font-medium text-muted-foreground">Proyecto:</span>
           <p className="text-sm text-foreground mt-1">{task.project}</p>
         </div>
+
+        {task.privacy === 'private' && (
+          <div className="bg-secondary/50 rounded-md p-2">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Users className="h-3 w-3" />
+              <span className="font-medium">Visible para:</span>
+            </div>
+            <p className="text-sm text-foreground mt-1">
+              {[task.responsible, ...(task.sharedWith || [])].join(', ')}
+            </p>
+          </div>
+        )}
 
         {task.comments.length > 0 && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
