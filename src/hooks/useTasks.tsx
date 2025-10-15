@@ -22,7 +22,7 @@ export function useTasks() {
             name: 'test_migration_check',
             status: 'pending',
             description: 'test',
-            responsible: 'test',
+            responsible: 'Ivo', // Use a valid username
             priority: 'low',
             project: 'test',
             privacy: 'general',
@@ -71,8 +71,8 @@ export function useTasks() {
             // Fallback al mapeo hardcodeado
             const emailToUsername: { [key: string]: string } = {
               'ivoezetarodriguez@gmail.com': 'Ivo',
-              'enzo@example.com': 'Enzo',
-              'mirella@example.com': 'Mirella',
+              'enzocaricchio09@gmail.com': 'Enzo',
+              'mcadillo.wsh@gmail.com': 'Mirella',
             };
             const username = emailToUsername[user.email];
             if (username) {
@@ -84,8 +84,8 @@ export function useTasks() {
           // Fallback al mapeo hardcodeado
           const emailToUsername: { [key: string]: string } = {
             'ivoezetarodriguez@gmail.com': 'Ivo',
-            'enzo@example.com': 'Enzo',
-            'mirella@example.com': 'Mirella',
+            'enzocaricchio09@gmail.com': 'Enzo',
+            'mcadillo.wsh@gmail.com': 'Mirella',
           };
           const username = emailToUsername[user.email];
           if (username) {
