@@ -170,7 +170,8 @@ export function useTasks() {
           due_date: taskData.dueDate || null,
           project: taskData.project,
           privacy: taskData.privacy,
-          shared_with: taskData.sharedWith || []
+          shared_with: taskData.sharedWith || [],
+          created_by: taskData.createdBy
         })
         .eq('id', taskData.id);
 
