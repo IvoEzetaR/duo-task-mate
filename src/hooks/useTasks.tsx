@@ -97,7 +97,7 @@ export function useTasks() {
         dueDate: task.due_date,
         project: task.project,
         privacy: task.privacy as Task['privacy'],
-        sharedWith: Array.isArray(task.shared_with) ? task.shared_with : [],
+        sharedWith: Array.isArray(task.shared_with) ? task.shared_with as string[] : [],
         createdAt: task.created_at,
         updatedAt: task.updated_at,
         comments: commentsData?.filter(comment => comment.task_id === task.id)

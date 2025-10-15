@@ -50,7 +50,13 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
         if (response.ok) {
           const data = await response.json();
           console.log('Usuarios cargados desde BD:', data);
-          setAvailableUsers(data);
+          setAvailableUsers(data.map(user => ({
+            id: user.id,
+            email: user.email,
+            username: user.username,
+            createdAt: user.created_at,
+            updatedAt: user.updated_at
+          })));
         } else {
           console.error('Error loading users:', response.status, response.statusText);
           // Fallback a usuarios hardcodeados
@@ -59,7 +65,13 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
             { id: '2', email: 'enzo@example.com', username: 'Enzo', created_at: '', updated_at: '' },
             { id: '3', email: 'mirella@example.com', username: 'Mirella', created_at: '', updated_at: '' },
           ];
-          setAvailableUsers(hardcodedUsers);
+          setAvailableUsers(hardcodedUsers.map(user => ({
+            id: user.id,
+            email: user.email,
+            username: user.username,
+            createdAt: user.created_at,
+            updatedAt: user.updated_at
+          })));
         }
       } catch (error) {
         console.error('Error loading users:', error);
@@ -69,7 +81,13 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
           { id: '2', email: 'enzo@example.com', username: 'Enzo', created_at: '', updated_at: '' },
           { id: '3', email: 'mirella@example.com', username: 'Mirella', created_at: '', updated_at: '' },
         ];
-        setAvailableUsers(hardcodedUsers);
+        setAvailableUsers(hardcodedUsers.map(user => ({
+          id: user.id,
+          email: user.email,
+          username: user.username,
+          createdAt: user.created_at,
+          updatedAt: user.updated_at
+        })));
       }
     };
 

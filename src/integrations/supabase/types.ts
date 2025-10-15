@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "13.0.4"
+    PostgrestVersion: "13.0.5"
   }
   public: {
     Tables: {
@@ -46,6 +46,44 @@ export type Database = {
           },
         ]
       }
+      task_invitations: {
+        Row: {
+          created_at: string
+          id: string
+          invitee_email: string
+          inviter_email: string
+          status: string
+          task_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invitee_email: string
+          inviter_email: string
+          status?: string
+          task_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invitee_email?: string
+          inviter_email?: string
+          status?: string
+          task_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_invitations_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           created_at: string
@@ -54,8 +92,10 @@ export type Database = {
           id: string
           name: string
           priority: string
+          privacy: string
           project: string
           responsible: string
+          shared_with: Json
           status: string
           updated_at: string
         }
@@ -66,8 +106,10 @@ export type Database = {
           id?: string
           name: string
           priority: string
+          privacy?: string
           project: string
           responsible: string
+          shared_with?: Json
           status: string
           updated_at?: string
         }
@@ -78,10 +120,35 @@ export type Database = {
           id?: string
           name?: string
           priority?: string
+          privacy?: string
           project?: string
           responsible?: string
+          shared_with?: Json
           status?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      users: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          updated_at?: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          username?: string
         }
         Relationships: []
       }
