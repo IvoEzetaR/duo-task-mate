@@ -112,10 +112,10 @@ export function useTasks() {
       // Filtrar tareas por privacidad si hay usuario autenticado
       if (user && currentUsername) {
         filteredTasks = tasksData?.filter(task => {
-          // Si la tarea es privada, solo el creador y usuarios compartidos pueden verla
+          // Si la tarea es privada, solo el responsable y usuarios compartidos pueden verla
           if (task.privacy === 'private') {
             const sharedWith = Array.isArray(task.shared_with) ? task.shared_with : [];
-            return task.created_by === currentUsername || sharedWith.includes(currentUsername);
+            return task.responsible === currentUsername || sharedWith.includes(currentUsername);
           }
 
           // Si la tarea es general, todos pueden verla
