@@ -7,9 +7,53 @@ export function useTasks() {
   const { user } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentUsername, setCurrentUsername] = useState<string>('');
 
   const fetchTasks = async () => {
     try {
+      // Obtener el username del usuario actual desde la base de datos
+      if (user?.email && !currentUsername) {
+        // Intentar obtener desde la base de datos primero
+        try {
+          const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/users?select=username&email=eq.${encodeURIComponent(user.email)}`, {
+            headers: {
+              'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            },
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data && data.length > 0) {
+              setCurrentUsername(data[0].username);
+            }
+          } else {
+            // Fallback al mapeo hardcodeado
+            const emailToUsername: { [key: string]: string } = {
+              'ivoezetarodriguez@gmail.com': 'Ivo',
+              'enzo@example.com': 'Enzo',
+              'mirella@example.com': 'Mirella',
+            };
+            const username = emailToUsername[user.email];
+            if (username) {
+              setCurrentUsername(username);
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching username:', error);
+          // Fallback al mapeo hardcodeado
+          const emailToUsername: { [key: string]: string } = {
+            'ivoezetarodriguez@gmail.com': 'Ivo',
+            'enzo@example.com': 'Enzo',
+            'mirella@example.com': 'Mirella',
+          };
+          const username = emailToUsername[user.email];
+          if (username) {
+            setCurrentUsername(username);
+          }
+        }
+      }
+
       const { data: tasksData, error: tasksError } = await supabase
         .from('tasks')
         .select('*')
@@ -26,22 +70,17 @@ export function useTasks() {
       let filteredTasks = tasksData || [];
 
       // Filtrar tareas por privacidad si hay usuario autenticado
-      if (user) {
+      if (user && currentUsername) {
         filteredTasks = tasksData?.filter(task => {
-          // Incluir tareas propias (siempre visibles para el creador)
-          if (task.responsible === user.email) {
-            return true;
+          // Si la tarea es privada, solo usuarios compartidos pueden verla
+          if (task.privacy === 'private') {
+            const sharedWith = Array.isArray(task.shared_with) ? task.shared_with : [];
+            return sharedWith.includes(currentUsername);
           }
 
           // Si la tarea es general, todos pueden verla
           if (task.privacy === 'general') {
             return true;
-          }
-
-          // Si la tarea es privada, solo el responsable y usuarios compartidos pueden verla
-          if (task.privacy === 'private') {
-            const sharedWith = Array.isArray(task.shared_with) ? task.shared_with : [];
-            return sharedWith.includes(user.email);
           }
 
           return false;

@@ -1,6 +1,6 @@
 export type TaskStatus = 'pending' | 'in-progress' | 'review' | 'completed';
 export type TaskPriority = 'high' | 'medium' | 'low';
-export type TaskResponsible = 'Ivo' | 'Enzo' | 'Mirella';
+export type TaskResponsible = string; // Ahora es string para nombres de usuario dinámicos
 export type TaskPrivacy = 'private' | 'general';
 
 export interface TaskComment {
@@ -14,13 +14,21 @@ export interface Task {
   name: string;
   status: TaskStatus;
   description: string;
-  responsible: TaskResponsible;
+  responsible: TaskResponsible; // Ahora es string (username)
   priority: TaskPriority;
   dueDate: string | null;
   project: string;
   comments: TaskComment[];
   privacy: TaskPrivacy;
-  sharedWith: string[];
+  sharedWith: string[]; // Array de usernames
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  username: string;
   createdAt: string;
   updatedAt: string;
 }

@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Task, TaskPriority, TaskResponsible, TaskStatus, TaskPrivacy } from "@/types/task";
+import { Task, TaskPriority, TaskResponsible, TaskStatus, TaskPrivacy, User } from "@/types/task";
 import { Plus, X } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface TaskFormProps {
   isOpen: boolean;
@@ -31,6 +32,51 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
 
   const [newComment, setNewComment] = useState('');
   const [newSharedUser, setNewSharedUser] = useState('');
+  const [privacyChanged, setPrivacyChanged] = useState(false);
+  const [availableUsers, setAvailableUsers] = useState<User[]>([]);
+
+  // Load available users
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        // Cargar usuarios desde la base de datos
+        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/users?select=*&order=username`, {
+          headers: {
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Usuarios cargados desde BD:', data);
+          setAvailableUsers(data);
+        } else {
+          console.error('Error loading users:', response.status, response.statusText);
+          // Fallback a usuarios hardcodeados
+          const hardcodedUsers = [
+            { id: '1', email: 'ivoezetarodriguez@gmail.com', username: 'Ivo', created_at: '', updated_at: '' },
+            { id: '2', email: 'enzo@example.com', username: 'Enzo', created_at: '', updated_at: '' },
+            { id: '3', email: 'mirella@example.com', username: 'Mirella', created_at: '', updated_at: '' },
+          ];
+          setAvailableUsers(hardcodedUsers);
+        }
+      } catch (error) {
+        console.error('Error loading users:', error);
+        // Fallback a usuarios hardcodeados
+        const hardcodedUsers = [
+          { id: '1', email: 'ivoezetarodriguez@gmail.com', username: 'Ivo', created_at: '', updated_at: '' },
+          { id: '2', email: 'enzo@example.com', username: 'Enzo', created_at: '', updated_at: '' },
+          { id: '3', email: 'mirella@example.com', username: 'Mirella', created_at: '', updated_at: '' },
+        ];
+        setAvailableUsers(hardcodedUsers);
+      }
+    };
+
+    if (isOpen) {
+      loadUsers();
+    }
+  }, [isOpen]);
 
   // Update form data when task prop changes
   useEffect(() => {
@@ -116,7 +162,14 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
   };
 
   const addSharedUser = () => {
-    if (!newSharedUser.trim() || formData.sharedWith.includes(newSharedUser.trim())) return;
+    if (!newSharedUser.trim() || formData.sharedWith.includes(newSharedUser.trim()) || formData.privacy !== 'private') return;
+
+    // Verificar que el usuario existe en la lista de usuarios disponibles
+    const userExists = availableUsers.some(user => user.username === newSharedUser.trim());
+    if (!userExists) {
+      console.error('Usuario no encontrado:', newSharedUser.trim());
+      return;
+    }
 
     setFormData(prev => ({
       ...prev,
@@ -169,15 +222,17 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
 
             <div>
               <Label htmlFor="responsible" className="text-foreground">Responsable</Label>
-              <Select value={formData.responsible} onValueChange={(value: TaskResponsible) => 
+              <Select value={formData.responsible} onValueChange={(value: TaskResponsible) =>
                 setFormData(prev => ({ ...prev, responsible: value }))}>
                 <SelectTrigger className="bg-background border-border text-foreground">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-popover border-border z-50">
-                  <SelectItem value="Ivo">Ivo</SelectItem>
-                  <SelectItem value="Enzo">Enzo</SelectItem>
-                  <SelectItem value="Mirella">Mirella</SelectItem>
+                  {availableUsers.map(user => (
+                    <SelectItem key={user.id} value={user.username}>
+                      {user.username}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -215,8 +270,14 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
 
             <div>
               <Label htmlFor="privacy" className="text-foreground">Privacidad</Label>
-              <Select value={formData.privacy} onValueChange={(value: TaskPrivacy) =>
-                setFormData(prev => ({ ...prev, privacy: value }))}>
+              <Select value={formData.privacy} onValueChange={(value: TaskPrivacy) => {
+                setFormData(prev => ({
+                  ...prev,
+                  privacy: value,
+                  sharedWith: value === 'general' ? [] : prev.sharedWith // Limpiar compartidos si cambia a general
+                }));
+                setPrivacyChanged(true);
+              }}>
                 <SelectTrigger className="bg-background border-border text-foreground">
                   <SelectValue />
                 </SelectTrigger>
@@ -249,49 +310,54 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
               />
             </div>
 
-            <div className="col-span-2">
-              <Label className="text-foreground">Usuarios Compartidos</Label>
-              <div className="space-y-3">
-                {formData.sharedWith.map((email) => (
-                  <div key={email} className="flex items-center gap-2 p-2 bg-secondary/50 rounded-md">
-                    <span className="text-sm text-foreground flex-1">{email}</span>
+            {formData.privacy === 'private' && (
+              <div className="col-span-2">
+                <Label className="text-foreground">Usuarios Compartidos</Label>
+                <div className="space-y-3">
+                  {formData.sharedWith.map((username) => (
+                    <div key={username} className="flex items-center gap-2 p-2 bg-secondary/50 rounded-md">
+                      <span className="text-sm text-foreground flex-1">{username}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeSharedUser(username)}
+                        className="h-6 w-6 p-0 hover:bg-destructive/20"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+
+                  <div className="flex gap-2">
+                    <Select value={newSharedUser} onValueChange={setNewSharedUser}>
+                      <SelectTrigger className="bg-background border-border text-foreground">
+                        <SelectValue placeholder="Seleccionar usuario..." />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover border-border z-50">
+                        {availableUsers
+                          .filter(user => !formData.sharedWith.includes(user.username))
+                          .map(user => (
+                            <SelectItem key={user.id} value={user.username}>
+                              {user.username}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
                     <Button
                       type="button"
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
-                      onClick={() => removeSharedUser(email)}
-                      className="h-6 w-6 p-0 hover:bg-destructive/20"
+                      onClick={addSharedUser}
+                      className="px-3 hover:bg-primary/10"
+                      disabled={!newSharedUser}
                     >
-                      <X className="h-3 w-3" />
+                      <Plus className="h-4 w-4" />
                     </Button>
                   </div>
-                ))}
-
-                <div className="flex gap-2">
-                  <Input
-                    value={newSharedUser}
-                    onChange={(e) => setNewSharedUser(e.target.value)}
-                    placeholder="Agregar email de usuario..."
-                    className="bg-background border-border text-foreground"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        addSharedUser();
-                      }
-                    }}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={addSharedUser}
-                    className="px-3 hover:bg-primary/10"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
                 </div>
               </div>
-            </div>
+            )}
           </div>
 
           <div>
