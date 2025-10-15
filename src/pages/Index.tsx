@@ -24,7 +24,12 @@ const Index = () => {
   const { signOut, user } = useAuth();
 
   const getCurrentUsername = async (): Promise<string> => {
-    if (!user?.email) return '';
+    if (!user?.email) {
+      console.error('No user email available');
+      return '';
+    }
+
+    console.log('Getting username for email:', user.email);
 
     try {
       // Intentar obtener desde la base de datos primero
@@ -35,11 +40,17 @@ const Index = () => {
         },
       });
 
+      console.log('Users API response status:', response.status);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('Users API response data:', data);
         if (data && data.length > 0) {
+          console.log('Found username from DB:', data[0].username);
           return data[0].username;
         }
+      } else {
+        console.error('Users API error:', response.status, response.statusText);
       }
 
       // Fallback al mapeo hardcodeado
@@ -48,7 +59,9 @@ const Index = () => {
         'enzo@example.com': 'Enzo',
         'mirella@example.com': 'Mirella',
       };
-      return emailToUsername[user.email] || '';
+      const fallbackUsername = emailToUsername[user.email];
+      console.log('Using fallback username:', fallbackUsername);
+      return fallbackUsername || '';
     } catch (error) {
       console.error('Error fetching username:', error);
       // Fallback al mapeo hardcodeado
@@ -57,7 +70,9 @@ const Index = () => {
         'enzo@example.com': 'Enzo',
         'mirella@example.com': 'Mirella',
       };
-      return emailToUsername[user.email] || '';
+      const fallbackUsername = emailToUsername[user.email];
+      console.log('Using fallback username after error:', fallbackUsername);
+      return fallbackUsername || '';
     }
   };
 
@@ -115,7 +130,9 @@ const Index = () => {
         const taskWithCreator = { ...taskData, createdBy: currentUsername };
         console.log('Task data with creator:', taskWithCreator);
 
-        await createTask(taskWithCreator);
+        const result = await createTask(taskWithCreator);
+        console.log('Create task result:', result);
+
         toast({
           title: "Tarea creada",
           description: "La nueva tarea se ha añadido correctamente.",
@@ -125,9 +142,11 @@ const Index = () => {
       setIsFormOpen(false);
     } catch (error) {
       console.error('Error saving task:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      console.error('Error details:', error);
       toast({
         title: "Error",
-        description: `No se pudo guardar la tarea: ${error instanceof Error ? error.message : 'Error desconocido'}`,
+        description: `No se pudo guardar la tarea: ${errorMessage}`,
         variant: "destructive",
       });
     }

@@ -9,6 +9,46 @@ export function useTasks() {
   const [loading, setLoading] = useState(true);
   const [currentUsername, setCurrentUsername] = useState<string>('');
 
+  // Apply migration on component mount
+  useEffect(() => {
+    const applyMigration = async () => {
+      try {
+        console.log('Checking if created_by column exists...');
+
+        // Try to insert a test task to see if column exists
+        const testInsert = await supabase
+          .from('tasks')
+          .insert({
+            name: 'test_migration_check',
+            status: 'pending',
+            description: 'test',
+            responsible: 'test',
+            priority: 'low',
+            project: 'test',
+            privacy: 'general',
+            created_by: 'test'
+          });
+
+        if (testInsert.error) {
+          console.log('Column does not exist, migration needed:', testInsert.error.message);
+          // Since we can't use RPC, we'll need to apply this manually in Supabase dashboard
+          console.error('Please apply the migration manually in Supabase SQL Editor:');
+          console.error('ALTER TABLE public.tasks ADD COLUMN created_by TEXT NOT NULL DEFAULT \'\';');
+        } else {
+          // Clean up test task
+          await supabase.from('tasks').delete().eq('name', 'test_migration_check');
+          console.log('Migration already applied - created_by column exists');
+        }
+      } catch (error) {
+        console.error('Migration check error:', error);
+      }
+    };
+
+    if (user) {
+      applyMigration();
+    }
+  }, [user]);
+
   const fetchTasks = async () => {
     try {
       // Obtener el username del usuario actual desde la base de datos
@@ -119,6 +159,8 @@ export function useTasks() {
 
   const createTask = async (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
+      console.log('Creating task with data:', taskData);
+
       const { data, error } = await supabase
         .from('tasks')
         .insert({
@@ -136,7 +178,12 @@ export function useTasks() {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      console.log('Task created successfully:', data);
 
       // Insert comments
       if (taskData.comments && taskData.comments.length > 0) {
@@ -146,7 +193,11 @@ export function useTasks() {
           date: comment.date
         }));
 
-        await supabase.from('task_comments').insert(commentsToInsert);
+        const { error: commentsError } = await supabase.from('task_comments').insert(commentsToInsert);
+        if (commentsError) {
+          console.error('Error inserting comments:', commentsError);
+          // Don't throw here, task was created successfully
+        }
       }
 
       await fetchTasks();
