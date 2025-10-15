@@ -25,9 +25,15 @@ const priorityConfig = {
   low: { emoji: '❄️', label: 'Baja', color: 'priority-low' }
 };
 
+const privacyConfig = {
+  private: { emoji: '🔒', label: 'Privada', color: 'pink-500' },
+  general: { emoji: '🌐', label: 'General', color: 'sky-500' }
+} as const;
+
 export function TaskCard({ task, onEdit, onStatusChange, onDelete }: TaskCardProps) {
   const statusInfo = statusConfig[task.status];
   const priorityInfo = priorityConfig[task.priority];
+  const privacyInfo = privacyConfig[task.privacy];
 
   const getNextStatus = (currentStatus: Task['status']): Task['status'] => {
     const statusFlow: Record<Task['status'], Task['status']> = {
@@ -64,6 +70,14 @@ export function TaskCard({ task, onEdit, onStatusChange, onDelete }: TaskCardPro
               )}
             >
               {priorityInfo.emoji} {priorityInfo.label}
+            </Badge>
+            <Badge
+              variant="secondary"
+              className={cn(
+                "text-xs font-medium border text-foreground border-border"
+              )}
+            >
+              {privacyInfo.emoji} {privacyInfo.label}
             </Badge>
           </div>
         </div>

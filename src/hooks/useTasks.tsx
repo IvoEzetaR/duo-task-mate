@@ -76,17 +76,12 @@ export function useTasks() {
 
       let filteredTasks = tasksData || [];
 
-      // Filtrar tareas por privacidad si hay usuario autenticado
+      // Visibilidad: mostrar SOLO tareas donde el usuario actual es responsable o está en compartidos
       if (user && currentUsername) {
         filteredTasks = (tasksData || []).filter(task => {
-          if (task.privacy === 'private') {
-            const sharedWith = Array.isArray(task.shared_with) ? task.shared_with : [];
-            return task.responsible === currentUsername || sharedWith.includes(currentUsername) || task.created_by === currentUsername;
-          }
-          if (task.privacy === 'general') {
-            return true;
-          }
-          return false;
+          const sharedWith = Array.isArray(task.shared_with) ? task.shared_with : [];
+          const canSee = task.responsible === currentUsername || sharedWith.includes(currentUsername);
+          return canSee;
         });
       }
       // If user is authenticated but username isn't ready, do not expose unfiltered tasks
