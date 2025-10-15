@@ -9,89 +9,56 @@ export function useTasks() {
   const [loading, setLoading] = useState(true);
   const [currentUsername, setCurrentUsername] = useState<string>('');
 
-  // Apply migration on component mount
+  // Resolve current username once we have the authenticated user
   useEffect(() => {
-    const applyMigration = async () => {
+    const resolveUsername = async () => {
+      if (!user?.email) return;
       try {
-        console.log('Checking if created_by column exists...');
+        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/users?select=username&email=eq.${encodeURIComponent(user.email)}`, {
+          headers: {
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+        });
 
-        // Try to insert a test task to see if column exists
-        const testInsert = await supabase
-          .from('tasks')
-          .insert({
-            name: 'test_migration_check',
-            status: 'pending',
-            description: 'test',
-            responsible: 'Ivo', // Use a valid username
-            priority: 'low',
-            project: 'test',
-            privacy: 'general',
-            created_by: 'test'
-          });
-
-        if (testInsert.error) {
-          console.log('Column does not exist, migration needed:', testInsert.error.message);
-          // Since we can't use RPC, we'll need to apply this manually in Supabase dashboard
-          console.error('Please apply the migration manually in Supabase SQL Editor:');
-          console.error('ALTER TABLE public.tasks ADD COLUMN created_by TEXT NOT NULL DEFAULT \'\';');
-        } else {
-          // Clean up test task
-          await supabase.from('tasks').delete().eq('name', 'test_migration_check');
-          console.log('Migration already applied - created_by column exists');
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.length > 0) {
+            setCurrentUsername(data[0].username);
+            return;
+          }
         }
+
+        // Fallback mapping
+        const emailToUsername: { [key: string]: string } = {
+          'ivoezetarodriguez@gmail.com': 'Ivo',
+          'enzocaricchio09@gmail.com': 'Enzo',
+          'mcadillo.wsh@gmail.com': 'Mirella',
+        };
+        const username = emailToUsername[user.email];
+        if (username) setCurrentUsername(username);
       } catch (error) {
-        console.error('Migration check error:', error);
+        console.error('Error fetching username:', error);
+        const emailToUsername: { [key: string]: string } = {
+          'ivoezetarodriguez@gmail.com': 'Ivo',
+          'enzocaricchio09@gmail.com': 'Enzo',
+          'mcadillo.wsh@gmail.com': 'Mirella',
+        };
+        const username = emailToUsername[user.email];
+        if (username) setCurrentUsername(username);
       }
     };
 
-    if (user) {
-      applyMigration();
-    }
-  }, [user]);
+    resolveUsername();
+  }, [user?.email]);
 
   const fetchTasks = async () => {
     try {
-      // Obtener el username del usuario actual desde la base de datos
-      if (user?.email && !currentUsername) {
-        // Intentar obtener desde la base de datos primero
-        try {
-          const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/users?select=username&email=eq.${encodeURIComponent(user.email)}`, {
-            headers: {
-              'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-            },
-          });
+      setLoading(true);
 
-          if (response.ok) {
-            const data = await response.json();
-            if (data && data.length > 0) {
-              setCurrentUsername(data[0].username);
-            }
-          } else {
-            // Fallback al mapeo hardcodeado
-            const emailToUsername: { [key: string]: string } = {
-              'ivoezetarodriguez@gmail.com': 'Ivo',
-              'enzocaricchio09@gmail.com': 'Enzo',
-              'mcadillo.wsh@gmail.com': 'Mirella',
-            };
-            const username = emailToUsername[user.email];
-            if (username) {
-              setCurrentUsername(username);
-            }
-          }
-        } catch (error) {
-          console.error('Error fetching username:', error);
-          // Fallback al mapeo hardcodeado
-          const emailToUsername: { [key: string]: string } = {
-            'ivoezetarodriguez@gmail.com': 'Ivo',
-            'enzocaricchio09@gmail.com': 'Enzo',
-            'mcadillo.wsh@gmail.com': 'Mirella',
-          };
-          const username = emailToUsername[user.email];
-          if (username) {
-            setCurrentUsername(username);
-          }
-        }
+      // If user is authenticated but we don't yet know their username, wait before showing anything
+      if (user && !currentUsername) {
+        return; // loading stays true; UI will show spinner until username is ready
       }
 
       const { data: tasksData, error: tasksError } = await supabase
@@ -111,20 +78,21 @@ export function useTasks() {
 
       // Filtrar tareas por privacidad si hay usuario autenticado
       if (user && currentUsername) {
-        filteredTasks = tasksData?.filter(task => {
-          // Si la tarea es privada, solo el responsable y usuarios compartidos pueden verla
+        filteredTasks = (tasksData || []).filter(task => {
           if (task.privacy === 'private') {
             const sharedWith = Array.isArray(task.shared_with) ? task.shared_with : [];
-            return task.responsible === currentUsername || sharedWith.includes(currentUsername);
+            return task.responsible === currentUsername || sharedWith.includes(currentUsername) || task.created_by === currentUsername;
           }
-
-          // Si la tarea es general, todos pueden verla
           if (task.privacy === 'general') {
             return true;
           }
-
           return false;
-        }) || [];
+        });
+      }
+      // If user is authenticated but username isn't ready, do not expose unfiltered tasks
+      if (user && !currentUsername) {
+        setTasks([]);
+        return;
       }
 
       const tasksWithComments = filteredTasks.map(task => ({
@@ -280,9 +248,13 @@ export function useTasks() {
     }
   };
 
+  // Fetch when username is resolved (for authenticated users), or immediately for guests
   useEffect(() => {
-    fetchTasks();
-  }, []);
+    if (!user || currentUsername) {
+      fetchTasks();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, currentUsername]);
 
   return {
     tasks,
