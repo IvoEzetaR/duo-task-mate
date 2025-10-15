@@ -27,7 +27,8 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
     project: task?.project || '',
     privacy: task?.privacy || 'general' as TaskPrivacy,
     sharedWith: task?.sharedWith || [],
-    comments: task?.comments || []
+    comments: task?.comments || [],
+    createdBy: task?.createdBy || ''
   });
 
   const [newComment, setNewComment] = useState('');
@@ -109,7 +110,8 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
         project: task.project || '',
         privacy: task.privacy || 'general',
         sharedWith: task.sharedWith || [],
-        comments: task.comments || []
+        comments: task.comments || [],
+        createdBy: task.createdBy || ''
       });
     } else {
       // Reset form for new task
@@ -123,7 +125,8 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
         project: '',
         privacy: 'general',
         sharedWith: [],
-        comments: []
+        comments: [],
+        createdBy: ''
       });
     }
     setNewComment('');
@@ -150,7 +153,8 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
       project: '',
       privacy: 'general',
       sharedWith: [],
-      comments: []
+      comments: [],
+      createdBy: ''
     });
     setNewComment('');
     setNewSharedUser('');

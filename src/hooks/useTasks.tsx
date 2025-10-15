@@ -72,10 +72,10 @@ export function useTasks() {
       // Filtrar tareas por privacidad si hay usuario autenticado
       if (user && currentUsername) {
         filteredTasks = tasksData?.filter(task => {
-          // Si la tarea es privada, solo usuarios compartidos pueden verla
+          // Si la tarea es privada, solo el creador y usuarios compartidos pueden verla
           if (task.privacy === 'private') {
             const sharedWith = Array.isArray(task.shared_with) ? task.shared_with : [];
-            return sharedWith.includes(currentUsername);
+            return task.created_by === currentUsername || sharedWith.includes(currentUsername);
           }
 
           // Si la tarea es general, todos pueden verla
@@ -98,6 +98,7 @@ export function useTasks() {
         project: task.project,
         privacy: task.privacy as Task['privacy'],
         sharedWith: Array.isArray(task.shared_with) ? task.shared_with as string[] : [],
+        createdBy: task.created_by,
         createdAt: task.created_at,
         updatedAt: task.updated_at,
         comments: commentsData?.filter(comment => comment.task_id === task.id)
@@ -129,7 +130,8 @@ export function useTasks() {
           due_date: taskData.dueDate || null,
           project: taskData.project,
           privacy: taskData.privacy,
-          shared_with: taskData.sharedWith || []
+          shared_with: taskData.sharedWith || [],
+          created_by: taskData.createdBy
         })
         .select()
         .single();

@@ -11,6 +11,7 @@ import { Plus, Grid3X3, Table, CheckCircle2, Clock, AlertCircle, LogOut } from "
 import { useToast } from "@/hooks/use-toast";
 import { useTasks } from "@/hooks/useTasks";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -21,6 +22,44 @@ const Index = () => {
   
   const { tasks, loading, createTask, updateTask, deleteTask, updateTaskStatus } = useTasks();
   const { signOut, user } = useAuth();
+
+  const getCurrentUsername = async (): Promise<string> => {
+    if (!user?.email) return '';
+
+    try {
+      // Intentar obtener desde la base de datos primero
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/users?select=username&email=eq.${encodeURIComponent(user.email)}`, {
+        headers: {
+          'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.length > 0) {
+          return data[0].username;
+        }
+      }
+
+      // Fallback al mapeo hardcodeado
+      const emailToUsername: { [key: string]: string } = {
+        'ivoezetarodriguez@gmail.com': 'Ivo',
+        'enzo@example.com': 'Enzo',
+        'mirella@example.com': 'Mirella',
+      };
+      return emailToUsername[user.email] || '';
+    } catch (error) {
+      console.error('Error fetching username:', error);
+      // Fallback al mapeo hardcodeado
+      const emailToUsername: { [key: string]: string } = {
+        'ivoezetarodriguez@gmail.com': 'Ivo',
+        'enzo@example.com': 'Enzo',
+        'mirella@example.com': 'Mirella',
+      };
+      return emailToUsername[user.email] || '';
+    }
+  };
 
   const filteredTasks = useMemo(() => {
     return tasks.filter(task => {
@@ -64,7 +103,10 @@ const Index = () => {
           description: "Los cambios se han guardado correctamente.",
         });
       } else {
-        await createTask(taskData);
+        // Para nuevas tareas, obtener el username del usuario actual
+        const currentUsername = await getCurrentUsername();
+        const taskWithCreator = { ...taskData, createdBy: currentUsername };
+        await createTask(taskWithCreator);
         toast({
           title: "Tarea creada",
           description: "La nueva tarea se ha añadido correctamente.",

@@ -21,6 +21,7 @@ export interface Task {
   comments: TaskComment[];
   privacy: TaskPrivacy;
   sharedWith: string[]; // Array de usernames
+  createdBy: string; // Username del creador
   createdAt: string;
   updatedAt: string;
 }
