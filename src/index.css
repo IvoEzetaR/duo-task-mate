@@ -47,6 +47,10 @@ All colors MUST be HSL.
     --priority-medium: 45 100% 60%;
     --priority-low: 200 100% 70%;
 
+    /* Additional color utilities */
+    --pink-500: 330 81% 60%;
+    --sky-500: 200 94% 55%;
+
     --gradient-primary: linear-gradient(135deg, hsl(240 100% 70%), hsl(260 100% 80%));
     --gradient-card: linear-gradient(135deg, hsl(0 0% 8%), hsl(240 4% 12%));
 

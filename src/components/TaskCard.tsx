@@ -46,27 +46,32 @@ export function TaskCard({ task, onEdit, onStatusChange, onDelete }: TaskCardPro
   };
 
   return (
-    <Card className="bg-gradient-card border-border shadow-card hover:shadow-task transition-all duration-300 group">
+    <Card className="bg-gradient-card border-border shadow-card hover:shadow-task transition-all duration-300 group" role="article" aria-labelledby={`task-title-${task.id}`}>
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between gap-2">
-          <CardTitle className="text-lg font-semibold text-foreground leading-tight">
+          <CardTitle id={`task-title-${task.id}`} className="text-lg font-semibold text-foreground leading-tight">
             {task.name}
           </CardTitle>
           <div className="flex flex-col gap-2 items-end">
-            <Badge 
-              variant="secondary" 
+            <Badge
+              variant="secondary"
               className={cn(
                 "text-xs font-medium border",
-                `text-${statusInfo.color} border-${statusInfo.color}/20`
+                statusInfo.color === 'task-pending' && "text-[hsl(var(--task-pending))] border-[hsl(var(--task-pending))/20]",
+                statusInfo.color === 'task-in-progress' && "text-[hsl(var(--task-in-progress))] border-[hsl(var(--task-in-progress))/20]",
+                statusInfo.color === 'task-review' && "text-[hsl(var(--task-review))] border-[hsl(var(--task-review))/20]",
+                statusInfo.color === 'task-completed' && "text-[hsl(var(--task-completed))] border-[hsl(var(--task-completed))/20]"
               )}
             >
               {statusInfo.emoji} {statusInfo.label}
             </Badge>
-            <Badge 
+            <Badge
               variant="outline"
               className={cn(
                 "text-xs font-medium border",
-                `text-${priorityInfo.color} border-${priorityInfo.color}/20`
+                priorityInfo.color === 'priority-high' && "text-[hsl(var(--priority-high))] border-[hsl(var(--priority-high))/20]",
+                priorityInfo.color === 'priority-medium' && "text-[hsl(var(--priority-medium))] border-[hsl(var(--priority-medium))/20]",
+                priorityInfo.color === 'priority-low' && "text-[hsl(var(--priority-low))] border-[hsl(var(--priority-low))/20]"
               )}
             >
               {priorityInfo.emoji} {priorityInfo.label}
@@ -74,7 +79,9 @@ export function TaskCard({ task, onEdit, onStatusChange, onDelete }: TaskCardPro
             <Badge
               variant="secondary"
               className={cn(
-                "text-xs font-medium border text-foreground border-border"
+                "text-xs font-medium border text-foreground border-border",
+                task.privacy === 'private' && "text-[hsl(var(--pink-500))] border-[hsl(var(--pink-500))/20]",
+                task.privacy === 'general' && "text-[hsl(var(--sky-500))] border-[hsl(var(--sky-500))/20]"
               )}
             >
               {privacyInfo.emoji} {privacyInfo.label}
@@ -130,6 +137,7 @@ export function TaskCard({ task, onEdit, onStatusChange, onDelete }: TaskCardPro
           size="sm"
           onClick={() => onEdit(task)}
           className="flex-1 hover:bg-primary/10 hover:border-primary/50"
+          aria-label={`Editar tarea: ${task.name}`}
         >
           Editar
         </Button>
@@ -138,6 +146,7 @@ export function TaskCard({ task, onEdit, onStatusChange, onDelete }: TaskCardPro
           size="sm"
           onClick={() => onStatusChange(task.id, getNextStatus(task.status))}
           className="flex-1 bg-primary hover:bg-primary/90"
+          aria-label={`Cambiar estado de ${task.name} a ${statusConfig[getNextStatus(task.status)].label}`}
         >
           {statusConfig[getNextStatus(task.status)].emoji} Siguiente
         </Button>
@@ -146,6 +155,7 @@ export function TaskCard({ task, onEdit, onStatusChange, onDelete }: TaskCardPro
           size="sm"
           onClick={() => onDelete(task.id)}
           className="px-3"
+          aria-label={`Eliminar tarea: ${task.name}`}
         >
           Eliminar
         </Button>

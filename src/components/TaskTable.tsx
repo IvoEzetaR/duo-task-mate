@@ -41,14 +41,14 @@ export function TaskTable({ tasks, onEdit, onStatusChange, onDelete }: TaskTable
       <Table>
         <TableHeader>
           <TableRow className="border-border hover:bg-muted/50">
-            <TableHead className="font-semibold text-foreground">Tarea</TableHead>
-            <TableHead className="font-semibold text-foreground">Estado</TableHead>
-            <TableHead className="font-semibold text-foreground">Responsable</TableHead>
-            <TableHead className="font-semibold text-foreground">Prioridad</TableHead>
-            <TableHead className="font-semibold text-foreground">Fecha Límite</TableHead>
-            <TableHead className="font-semibold text-foreground">Proyecto</TableHead>
-            <TableHead className="font-semibold text-foreground text-center">Comentarios</TableHead>
-            <TableHead className="font-semibold text-foreground text-center">Acciones</TableHead>
+            <TableHead className="font-semibold text-foreground" scope="col">Tarea</TableHead>
+            <TableHead className="font-semibold text-foreground" scope="col">Estado</TableHead>
+            <TableHead className="font-semibold text-foreground" scope="col">Responsable</TableHead>
+            <TableHead className="font-semibold text-foreground" scope="col">Prioridad</TableHead>
+            <TableHead className="font-semibold text-foreground" scope="col">Fecha Límite</TableHead>
+            <TableHead className="font-semibold text-foreground" scope="col">Proyecto</TableHead>
+            <TableHead className="font-semibold text-foreground text-center" scope="col">Comentarios</TableHead>
+            <TableHead className="font-semibold text-foreground text-center" scope="col">Acciones</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -67,11 +67,14 @@ export function TaskTable({ tasks, onEdit, onStatusChange, onDelete }: TaskTable
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Badge 
-                    variant="secondary" 
+                  <Badge
+                    variant="secondary"
                     className={cn(
                       "text-xs font-medium border",
-                      `text-${statusInfo.color} border-${statusInfo.color}/20`
+                      statusInfo.color === 'task-pending' && "text-[hsl(var(--task-pending))] border-[hsl(var(--task-pending))/20]",
+                      statusInfo.color === 'task-in-progress' && "text-[hsl(var(--task-in-progress))] border-[hsl(var(--task-in-progress))/20]",
+                      statusInfo.color === 'task-review' && "text-[hsl(var(--task-review))] border-[hsl(var(--task-review))/20]",
+                      statusInfo.color === 'task-completed' && "text-[hsl(var(--task-completed))] border-[hsl(var(--task-completed))/20]"
                     )}
                   >
                     {statusInfo.emoji} {statusInfo.label}
@@ -81,11 +84,13 @@ export function TaskTable({ tasks, onEdit, onStatusChange, onDelete }: TaskTable
                   {task.responsible}
                 </TableCell>
                 <TableCell>
-                  <Badge 
+                  <Badge
                     variant="outline"
                     className={cn(
                       "text-xs font-medium border",
-                      `text-${priorityInfo.color} border-${priorityInfo.color}/20`
+                      priorityInfo.color === 'priority-high' && "text-[hsl(var(--priority-high))] border-[hsl(var(--priority-high))/20]",
+                      priorityInfo.color === 'priority-medium' && "text-[hsl(var(--priority-medium))] border-[hsl(var(--priority-medium))/20]",
+                      priorityInfo.color === 'priority-low' && "text-[hsl(var(--priority-low))] border-[hsl(var(--priority-low))/20]"
                     )}
                   >
                     {priorityInfo.emoji} {priorityInfo.label}
@@ -112,6 +117,7 @@ export function TaskTable({ tasks, onEdit, onStatusChange, onDelete }: TaskTable
                       size="sm"
                       onClick={() => onEdit(task)}
                       className="h-8 w-8 p-0 hover:bg-primary/10"
+                      aria-label={`Editar tarea: ${task.name}`}
                     >
                       <Edit className="h-3 w-3" />
                     </Button>
@@ -120,6 +126,7 @@ export function TaskTable({ tasks, onEdit, onStatusChange, onDelete }: TaskTable
                       size="sm"
                       onClick={() => onStatusChange(task.id, getNextStatus(task.status))}
                       className="h-8 px-2 text-xs hover:bg-primary/10"
+                      aria-label={`Cambiar estado de ${task.name} a ${statusConfig[getNextStatus(task.status)].label}`}
                     >
                       {statusConfig[getNextStatus(task.status)].emoji}
                     </Button>
@@ -128,6 +135,7 @@ export function TaskTable({ tasks, onEdit, onStatusChange, onDelete }: TaskTable
                       size="sm"
                       onClick={() => onDelete(task.id)}
                       className="h-8 px-2 text-xs"
+                      aria-label={`Eliminar tarea: ${task.name}`}
                     >
                       🗑️
                     </Button>

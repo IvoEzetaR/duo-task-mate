@@ -5,9 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Task, TaskPriority, TaskResponsible, TaskStatus, TaskPrivacy, User } from "@/types/task";
+import { Task, TaskPriority, TaskResponsible, TaskStatus, TaskPrivacy } from "@/types/task";
 import { Plus, X } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { useUsers } from "@/hooks/useUsers";
 
 interface TaskFormProps {
   isOpen: boolean;
@@ -33,69 +33,9 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
 
   const [newComment, setNewComment] = useState('');
   const [newSharedUser, setNewSharedUser] = useState('');
-  const [privacyChanged, setPrivacyChanged] = useState(false);
-  const [availableUsers, setAvailableUsers] = useState<User[]>([]);
+  const { users: availableUsers } = useUsers();
 
-  // Load available users
-  useEffect(() => {
-    const loadUsers = async () => {
-      try {
-        // Cargar usuarios desde la base de datos
-        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/users?select=*&order=username`, {
-          headers: {
-            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Usuarios cargados desde BD:', data);
-          setAvailableUsers(data.map(user => ({
-            id: user.id,
-            email: user.email,
-            username: user.username,
-            createdAt: user.created_at,
-            updatedAt: user.updated_at
-          })));
-        } else {
-          console.error('Error loading users:', response.status, response.statusText);
-          // Fallback a usuarios hardcodeados
-          const hardcodedUsers = [
-            { id: '1', email: 'ivoezetarodriguez@gmail.com', username: 'Ivo', created_at: '', updated_at: '' },
-            { id: '2', email: 'enzo@example.com', username: 'Enzo', created_at: '', updated_at: '' },
-            { id: '3', email: 'mirella@example.com', username: 'Mirella', created_at: '', updated_at: '' },
-          ];
-          setAvailableUsers(hardcodedUsers.map(user => ({
-            id: user.id,
-            email: user.email,
-            username: user.username,
-            createdAt: user.created_at,
-            updatedAt: user.updated_at
-          })));
-        }
-      } catch (error) {
-        console.error('Error loading users:', error);
-        // Fallback a usuarios hardcodeados
-        const hardcodedUsers = [
-          { id: '1', email: 'ivoezetarodriguez@gmail.com', username: 'Ivo', created_at: '', updated_at: '' },
-          { id: '2', email: 'enzo@example.com', username: 'Enzo', created_at: '', updated_at: '' },
-          { id: '3', email: 'mirella@example.com', username: 'Mirella', created_at: '', updated_at: '' },
-        ];
-        setAvailableUsers(hardcodedUsers.map(user => ({
-          id: user.id,
-          email: user.email,
-          username: user.username,
-          createdAt: user.created_at,
-          updatedAt: user.updated_at
-        })));
-      }
-    };
-
-    if (isOpen) {
-      loadUsers();
-    }
-  }, [isOpen]);
+  // availableUsers se carga y cachea desde useUsers()
 
   // Update form data when task prop changes
   useEffect(() => {
@@ -200,11 +140,16 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
     setNewSharedUser('');
   };
 
-  const removeSharedUser = (userEmail: string) => {
+  const removeSharedUser = (username: string) => {
     setFormData(prev => ({
       ...prev,
-      sharedWith: prev.sharedWith.filter(email => email !== userEmail)
+      sharedWith: prev.sharedWith.filter(u => u !== username)
     }));
+  };
+
+  const privacyLabel: Record<TaskPrivacy, string> = {
+    private: '🔒 Privada',
+    general: '🌐 General',
   };
 
   return (
@@ -298,12 +243,11 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
                   privacy: value,
                   sharedWith: value === 'general' ? [] : prev.sharedWith // Limpiar compartidos si cambia a general
                 }));
-                setPrivacyChanged(true);
               }}>
                 <SelectTrigger className="bg-background border-border text-foreground">
-                  <SelectValue />
+                  <span>{privacyLabel[formData.privacy as TaskPrivacy]}</span>
                 </SelectTrigger>
-                <SelectContent className="bg-popover border-border z-50">
+                <SelectContent position="item-aligned" className="bg-popover border-border z-50">
                   <SelectItem value="private">🔒 Privada</SelectItem>
                   <SelectItem value="general">🌐 General</SelectItem>
                 </SelectContent>
@@ -356,7 +300,7 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
                       <SelectTrigger className="bg-background border-border text-foreground">
                         <SelectValue placeholder="Seleccionar usuario..." />
                       </SelectTrigger>
-                      <SelectContent className="bg-popover border-border z-50">
+                      <SelectContent position="item-aligned" className="bg-popover border-border z-50">
                         {availableUsers
                           .filter(user => !formData.sharedWith.includes(user.username))
                           .map(user => (

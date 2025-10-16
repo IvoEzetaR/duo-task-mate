@@ -11,7 +11,6 @@ import { Plus, Grid3X3, Table, CheckCircle2, Clock, AlertCircle, LogOut } from "
 import { useToast } from "@/hooks/use-toast";
 import { useTasks } from "@/hooks/useTasks";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -24,15 +23,9 @@ const Index = () => {
   const { signOut, user } = useAuth();
 
   const getCurrentUsername = async (): Promise<string> => {
-    if (!user?.email) {
-      console.error('No user email available');
-      return '';
-    }
-
-    console.log('Getting username for email:', user.email);
+    if (!user?.email) return '';
 
     try {
-      // Intentar obtener desde la base de datos primero
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/users?select=username&email=eq.${encodeURIComponent(user.email)}`, {
         headers: {
           'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
@@ -40,40 +33,28 @@ const Index = () => {
         },
       });
 
-      console.log('Users API response status:', response.status);
-
       if (response.ok) {
         const data = await response.json();
-        console.log('Users API response data:', data);
         if (data && data.length > 0) {
-          console.log('Found username from DB:', data[0].username);
           return data[0].username;
         }
-      } else {
-        console.error('Users API error:', response.status, response.statusText);
       }
-
-      // Fallback al mapeo hardcodeado
-      const emailToUsername: { [key: string]: string } = {
-        'ivoezetarodriguez@gmail.com': 'Ivo',
-        'enzo@example.com': 'Enzo',
-        'mirella@example.com': 'Mirella',
-      };
-      const fallbackUsername = emailToUsername[user.email];
-      console.log('Using fallback username:', fallbackUsername);
-      return fallbackUsername || '';
-    } catch (error) {
-      console.error('Error fetching username:', error);
-      // Fallback al mapeo hardcodeado
-      const emailToUsername: { [key: string]: string } = {
-        'ivoezetarodriguez@gmail.com': 'Ivo',
-        'enzo@example.com': 'Enzo',
-        'mirella@example.com': 'Mirella',
-      };
-      const fallbackUsername = emailToUsername[user.email];
-      console.log('Using fallback username after error:', fallbackUsername);
-      return fallbackUsername || '';
+    } catch (_) {
+      // ignore and use fallbacks
     }
+
+    // Fallbacks no bloqueantes
+    const emailToUsername: { [key: string]: string } = {
+      'ivoezetarodriguez@gmail.com': 'Ivo',
+      'enzocaricchio09@gmail.com': 'Enzo',
+      'mcadillo.wsh@gmail.com': 'Mirella',
+    };
+    const mapped = emailToUsername[user.email];
+    if (mapped) return mapped;
+
+    // Derivar desde el email si no existe mapeo/DB
+    const derived = user.email.split('@')[0] || 'usuario';
+    return derived;
   };
 
   const filteredTasks = useMemo(() => {
@@ -123,11 +104,7 @@ const Index = () => {
         console.log('Current username:', currentUsername);
         console.log('Task data before:', taskData);
 
-        if (!currentUsername) {
-          throw new Error('No se pudo obtener el username del usuario actual');
-        }
-
-        const taskWithCreator = { ...taskData, createdBy: currentUsername };
+        const taskWithCreator = { ...taskData, createdBy: currentUsername || (user?.email?.split('@')[0] ?? 'usuario') };
         console.log('Task data with creator:', taskWithCreator);
 
         const result = await createTask(taskWithCreator);

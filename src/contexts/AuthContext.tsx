@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { errorHandler, AuthenticationError } from '@/lib/errors';
 
 interface AuthContextType {
   user: User | null;
@@ -46,16 +47,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { error };
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) {
+        const appError = errorHandler.handle(error, false);
+        return { error: appError };
+      }
+      
+      return { error: null };
+    } catch (err) {
+      const appError = errorHandler.handle(err, false);
+      return { error: appError };
+    }
   };
 
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        errorHandler.handle(error, true);
+      }
+    } catch (err) {
+      errorHandler.handle(err, true);
+    }
   };
 
   const value = {

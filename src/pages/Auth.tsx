@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { AppError } from '@/lib/errors';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -33,17 +33,10 @@ const Auth = () => {
       const { error } = await signIn(email, password);
 
       if (error) {
-        let errorMessage = 'Error al iniciar sesión';
-
-        if (error.message.includes('Invalid login credentials')) {
-          errorMessage = 'Email o contraseña incorrectos';
-        } else if (error.message.includes('Email not confirmed')) {
-          errorMessage = 'Por favor confirma tu email antes de iniciar sesión';
-        }
-
+        // El error ya está procesado por el AuthContext
         toast({
           title: 'Error',
-          description: errorMessage,
+          description: error.message,
           variant: 'destructive',
         });
       } else {
@@ -54,9 +47,10 @@ const Auth = () => {
         navigate('/');
       }
     } catch (error) {
+      const appError = error as AppError;
       toast({
         title: 'Error',
-        description: 'Ocurrió un error inesperado',
+        description: appError.message || 'Ocurrió un error inesperado',
         variant: 'destructive',
       });
     } finally {
