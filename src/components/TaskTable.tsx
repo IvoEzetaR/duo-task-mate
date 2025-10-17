@@ -25,6 +25,11 @@ const priorityConfig = {
   low: { emoji: '❄️', label: 'Baja', color: 'priority-low' }
 };
 
+const privacyConfig = {
+  private: { emoji: '🔒', label: 'Privada', color: 'pink-500' },
+  general: { emoji: '🌐', label: 'General', color: 'sky-500' }
+};
+
 export function TaskTable({ tasks, onEdit, onStatusChange, onDelete }: TaskTableProps) {
   const getNextStatus = (currentStatus: Task['status']): Task['status'] => {
     const statusFlow: Record<Task['status'], Task['status']> = {
@@ -45,6 +50,7 @@ export function TaskTable({ tasks, onEdit, onStatusChange, onDelete }: TaskTable
             <TableHead className="font-semibold text-foreground" scope="col">Estado</TableHead>
             <TableHead className="font-semibold text-foreground" scope="col">Responsable</TableHead>
             <TableHead className="font-semibold text-foreground" scope="col">Prioridad</TableHead>
+            <TableHead className="font-semibold text-foreground" scope="col">Privacidad</TableHead>
             <TableHead className="font-semibold text-foreground" scope="col">Fecha Límite</TableHead>
             <TableHead className="font-semibold text-foreground" scope="col">Proyecto</TableHead>
             <TableHead className="font-semibold text-foreground text-center" scope="col">Comentarios</TableHead>
@@ -55,6 +61,7 @@ export function TaskTable({ tasks, onEdit, onStatusChange, onDelete }: TaskTable
           {tasks.map((task) => {
             const statusInfo = statusConfig[task.status];
             const priorityInfo = priorityConfig[task.priority];
+            const privacyInfo = privacyConfig[task.privacy];
             
             return (
               <TableRow key={task.id} className="border-border hover:bg-muted/30">
@@ -94,6 +101,18 @@ export function TaskTable({ tasks, onEdit, onStatusChange, onDelete }: TaskTable
                     )}
                   >
                     {priorityInfo.emoji} {priorityInfo.label}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge
+                    variant="secondary"
+                    className={cn(
+                      "text-xs font-medium border text-foreground border-border",
+                      task.privacy === 'private' && "text-[hsl(var(--pink-500))] border-[hsl(var(--pink-500))/20]",
+                      task.privacy === 'general' && "text-[hsl(var(--sky-500))] border-[hsl(var(--sky-500))/20]"
+                    )}
+                  >
+                    {privacyInfo.emoji} {privacyInfo.label}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-foreground">

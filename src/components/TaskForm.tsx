@@ -124,7 +124,7 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
   };
 
   const addSharedUser = () => {
-    if (!newSharedUser.trim() || formData.sharedWith.includes(newSharedUser.trim()) || formData.privacy !== 'private') return;
+    if (!newSharedUser.trim() || formData.sharedWith.includes(newSharedUser.trim())) return;
 
     // Verificar que el usuario existe en la lista de usuarios disponibles
     const userExists = availableUsers.some(user => user.username === newSharedUser.trim());
@@ -238,11 +238,16 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
             <div>
               <Label htmlFor="privacy" className="text-foreground">Privacidad</Label>
               <Select value={formData.privacy} onValueChange={(value: TaskPrivacy) => {
-                setFormData(prev => ({
-                  ...prev,
-                  privacy: value,
-                  sharedWith: value === 'general' ? [] : prev.sharedWith // Limpiar compartidos si cambia a general
-                }));
+                setFormData(prev => {
+                  // Si cambiamos a privado y no hay usuarios compartidos, asegurarnos de que sharedWith sea un array vacío
+                  // Si cambiamos a general, limpiar la lista de compartidos
+                  const newSharedWith = value === 'general' ? [] : prev.sharedWith;
+                  return {
+                    ...prev,
+                    privacy: value,
+                    sharedWith: newSharedWith
+                  };
+                });
               }}>
                 <SelectTrigger className="bg-background border-border text-foreground">
                   <span>{privacyLabel[formData.privacy as TaskPrivacy]}</span>
