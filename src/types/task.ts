@@ -1,6 +1,6 @@
 export type TaskStatus = 'pending' | 'in-progress' | 'review' | 'completed';
 export type TaskPriority = 'high' | 'medium' | 'low';
-export type TaskResponsible = string; // Ahora es string para nombres de usuario dinámicos
+export type TaskResponsible = 'Ivo' | 'Enzo' | 'Mirella'; // Definimos los usuarios permitidos
 export type TaskPrivacy = 'private' | 'general';
 
 export interface TaskComment {

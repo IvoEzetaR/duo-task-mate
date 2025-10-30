@@ -29,17 +29,53 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+        
+        // Establecer username en la sesión de Supabase para RLS
+        if (session?.user?.email) {
+          try {
+            const { data: userData } = await supabase
+              .from('users')
+              .select('username')
+              .eq('email', session.user.email)
+              .single();
+            
+            if (userData?.username) {
+              await supabase.rpc('set_session_username', { username: userData.username });
+            }
+          } catch (error) {
+            console.error('Error setting session username:', error);
+          }
+        }
+        
         setLoading(false);
       }
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      
+      // Establecer username en la sesión de Supabase para RLS
+      if (session?.user?.email) {
+        try {
+          const { data: userData } = await supabase
+            .from('users')
+            .select('username')
+            .eq('email', session.user.email)
+            .single();
+          
+          if (userData?.username) {
+            await supabase.rpc('set_session_username', { username: userData.username });
+          }
+        } catch (error) {
+          console.error('Error setting session username:', error);
+        }
+      }
+      
       setLoading(false);
     });
 

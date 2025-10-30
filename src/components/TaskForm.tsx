@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import * as SelectPrimitive from "@radix-ui/react-select";
 import { Task, TaskPriority, TaskResponsible, TaskStatus, TaskPrivacy } from "@/types/task";
 import { Plus, X } from "lucide-react";
 import { useUsers } from "@/hooks/useUsers";
@@ -154,7 +155,7 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card border-border">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-visible bg-card border-border">
         <DialogHeader>
           <DialogTitle className="text-foreground">
             {task ? 'Editar Tarea' : 'Nueva Tarea'}
@@ -237,22 +238,32 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
 
             <div>
               <Label htmlFor="privacy" className="text-foreground">Privacidad</Label>
-              <Select value={formData.privacy} onValueChange={(value: TaskPrivacy) => {
-                setFormData(prev => {
-                  // Si cambiamos a privado y no hay usuarios compartidos, asegurarnos de que sharedWith sea un array vacío
-                  // Si cambiamos a general, limpiar la lista de compartidos
-                  const newSharedWith = value === 'general' ? [] : prev.sharedWith;
-                  return {
-                    ...prev,
-                    privacy: value,
-                    sharedWith: newSharedWith
-                  };
-                });
-              }}>
+              <Select
+                value={formData.privacy}
+                onValueChange={(value: TaskPrivacy) => {
+                  setFormData(prev => {
+                    // Si cambiamos a privado y no hay usuarios compartidos, asegurarnos de que sharedWith sea un array vacío
+                    // Si cambiamos a general, limpiar la lista de compartidos
+                    const newSharedWith = value === 'general' ? [] : prev.sharedWith;
+                    return {
+                      ...prev,
+                      privacy: value,
+                      sharedWith: newSharedWith
+                    };
+                  });
+                }}
+              >
                 <SelectTrigger className="bg-background border-border text-foreground">
-                  <span>{privacyLabel[formData.privacy as TaskPrivacy]}</span>
+                  <SelectValue placeholder="Seleccionar privacidad">
+                    {privacyLabel[formData.privacy as TaskPrivacy]}
+                  </SelectValue>
                 </SelectTrigger>
-                <SelectContent position="item-aligned" className="bg-popover border-border z-50">
+                <SelectContent
+                  className="bg-popover border-border z-[9999]"
+                  position="popper"
+                  side="bottom"
+                  align="start"
+                >
                   <SelectItem value="private">🔒 Privada</SelectItem>
                   <SelectItem value="general">🌐 General</SelectItem>
                 </SelectContent>
@@ -305,7 +316,7 @@ export function TaskForm({ isOpen, onClose, onSave, task }: TaskFormProps) {
                       <SelectTrigger className="bg-background border-border text-foreground">
                         <SelectValue placeholder="Seleccionar usuario..." />
                       </SelectTrigger>
-                      <SelectContent position="item-aligned" className="bg-popover border-border z-50">
+                      <SelectContent position="item-aligned" className="bg-popover border-border z-[9999]">
                         {availableUsers
                           .filter(user => !formData.sharedWith.includes(user.username))
                           .map(user => (

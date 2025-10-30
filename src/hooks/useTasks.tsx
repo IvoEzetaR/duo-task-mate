@@ -68,8 +68,12 @@ export function useTasks() {
     try {
       setLoading(true);
 
-      // Even si no tenemos username aún, podemos cargar y luego filtrar solo generales
+      // Establecer username para las políticas RLS
+      if (currentUsername) {
+        await supabase.rpc('set_session_username', { username: currentUsername });
+      }
 
+      // Ahora las políticas RLS se encargarán del filtrado automáticamente
       const { data: tasksData, error: tasksError } = await supabase
         .from('tasks')
         .select('*')
@@ -83,28 +87,8 @@ export function useTasks() {
 
       if (commentsError) throw commentsError;
 
-      let filteredTasks = tasksData || [];
-
-      // Visibilidad:
-      // - No autenticado: solo generales
-      // - Autenticado y con username: generales + privadas donde el usuario es responsable o está en compartidos
-      // - Autenticado sin username resuelto aún: mostrar solo generales (evitar exponer privadas)
-      if (!user) {
-        filteredTasks = (tasksData || []).filter(task => task.privacy === 'general');
-      } else if (user && !currentUsername) {
-        filteredTasks = (tasksData || []).filter(task => task.privacy === 'general');
-      } else {
-        filteredTasks = (tasksData || []).filter(task => {
-          if (task.privacy === 'general') return true;
-          if (!currentUsername) return false;
-          const sharedWith = Array.isArray(task.shared_with) ? task.shared_with as string[] : [];
-          return task.responsible === currentUsername ||
-                 task.created_by === currentUsername ||
-                 sharedWith.includes(currentUsername);
-        });
-      }
-
-      const tasksWithComments = filteredTasks.map(task => ({
+      // Ya no necesitamos filtrar manualmente, las políticas RLS lo hacen por nosotros
+      const tasksWithComments = (tasksData || []).map((task: any) => ({
         id: task.id,
         name: task.name,
         status: task.status as Task['status'],
@@ -118,8 +102,8 @@ export function useTasks() {
         createdBy: task.created_by,
         createdAt: task.created_at,
         updatedAt: task.updated_at,
-        comments: commentsData?.filter(comment => comment.task_id === task.id)
-          .map(comment => ({
+        comments: commentsData?.filter((comment: any) => comment.task_id === task.id)
+          .map((comment: any) => ({
             id: comment.id,
             text: comment.text,
             date: comment.date
@@ -137,6 +121,11 @@ export function useTasks() {
   const createTask = async (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
       console.log('Creating task with data:', taskData);
+
+      // Establecer username para las políticas RLS
+      if (currentUsername) {
+        await supabase.rpc('set_session_username', { username: currentUsername });
+      }
 
       const { data, error } = await supabase
         .from('tasks')
@@ -187,6 +176,11 @@ export function useTasks() {
 
   const updateTask = async (taskData: Task) => {
     try {
+      // Establecer username para las políticas RLS
+      if (currentUsername) {
+        await supabase.rpc('set_session_username', { username: currentUsername });
+      }
+
       const { error } = await supabase
         .from('tasks')
         .update({
@@ -212,16 +206,16 @@ export function useTasks() {
           .select('*')
           .eq('task_id', taskData.id);
 
-        const existingCommentIds = new Set(existingComments?.map(c => c.id) || []);
+        const existingCommentIds = new Set(existingComments?.map((c: any) => c.id) || []);
         const newCommentIds = new Set(taskData.comments.map(c => c.id));
 
         // Eliminar comentarios que ya no existen
-        const commentsToDelete = existingComments?.filter(c => !newCommentIds.has(c.id)) || [];
+        const commentsToDelete = existingComments?.filter((c: any) => !newCommentIds.has(c.id)) || [];
         if (commentsToDelete.length > 0) {
           await supabase
             .from('task_comments')
             .delete()
-            .in('id', commentsToDelete.map(c => c.id));
+            .in('id', commentsToDelete.map((c: any) => c.id));
         }
 
         // Insertar solo comentarios nuevos
@@ -250,6 +244,11 @@ export function useTasks() {
 
   const deleteTask = async (taskId: string) => {
     try {
+      // Establecer username para las políticas RLS
+      if (currentUsername) {
+        await supabase.rpc('set_session_username', { username: currentUsername });
+      }
+
       const { error } = await supabase
         .from('tasks')
         .delete()
@@ -268,6 +267,11 @@ export function useTasks() {
 
   const updateTaskStatus = async (taskId: string, newStatus: Task['status']) => {
     try {
+      // Establecer username para las políticas RLS
+      if (currentUsername) {
+        await supabase.rpc('set_session_username', { username: currentUsername });
+      }
+
       const { error } = await supabase
         .from('tasks')
         .update({ status: newStatus })
